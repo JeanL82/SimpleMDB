@@ -53,6 +53,12 @@ namespace SimpleMDB
                 await response.OutputStream.WriteAsync(content);
                 response.Close();
             }
+            else 
+            {
+                response.StatusCode = (int)HttpStatusCode.NotFound;
+                response.Close();
+
+            }
         }
     }
 }
