@@ -65,10 +65,18 @@ public class HttpRouter
                 foreach (var middleware in endpointMiddlewares)
                 {
                     await middleware(req, res, option);
-                    if (res.StatusCode != Response_NOT_SENT_YET) return;
+                    if (res.StatusCode != Response_NOT_SENT_YET){ return;}
                 }
             }
         }
+
+      if(res.StatusCode == Response_NOT_SENT_YET)
+      {
+        res.StatusCode = (int)HttpStatusCode.NotFound;
+        res.Close();
+      }
+
     
     }
+
 }
