@@ -65,5 +65,11 @@ namespace SimpleMDB
                 res.Close();
             }
         }
+
+        internal static async Task Respond(HttpListenerRequest req, HttpListenerResponse res, Hashtable options, int internalServerError, string v)
+        {
+            throw new NotImplementedException();
+        }
     }
+    
 }

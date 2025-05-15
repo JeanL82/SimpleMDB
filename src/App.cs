@@ -1,9 +1,8 @@
-using System;
+
 using System.Collections;
-using System.Collections.Generic;
 using System.Net;
 using System.Text;
-using System.Threading.Tasks;
+
 
 namespace SimpleMDB
 {
@@ -14,16 +13,20 @@ namespace SimpleMDB
 
         public App()
         {
-            var host = "http://127.0.0.1:8081/"; // usa http para evitar problemas con certificados
-            server = new HttpListener();
-            server.Prefixes.Add(host);
-            Console.WriteLine("Server listening on " + host);
+             var host = "http://127.0.0.1:8085/";
+    server = new HttpListener();
+    server.Prefixes.Add(host);
+    Console.WriteLine("Server listening on " + host);
 
-            var authController = new AuthController();
-            router = new Httpsrouter();
+    var userRepository = new MockUser();
+    var userService = new MockUser(userRepository);
+    var authController = new AuthController();
+    var usersController = new UserController(userService);
+    router = new Httpsrouter();
 
-            router.AddGet("/", authController.LandingPageGet);
-        }
+    router.AddGet("/", authController.LandingPageGet);
+    router.AddGet("/users", usersController.ViewAllGet);
+}
 
         public async Task Start()
         {
@@ -48,6 +51,16 @@ namespace SimpleMDB
             var options = new Hashtable();
 
             await router.Handle(request, response, options);
+        }
+    }
+
+    internal class MockUserService
+    {
+        private MockUser userRepository;
+
+        public MockUserService(MockUser userRepository)
+        {
+            this.userRepository = userRepository;
         }
     }
 
@@ -91,6 +104,11 @@ namespace SimpleMDB
                 await response.OutputStream.WriteAsync(buffer, 0, buffer.Length);
                 response.OutputStream.Close();
             }
+        }
+
+        internal void AddGet(string v, object viewAllGet)
+        {
+            throw new NotImplementedException();
         }
     }
 }
