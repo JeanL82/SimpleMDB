@@ -21,4 +21,13 @@ public class Result<T>
         Error = error;
     }
 
+    internal static Result<User> Success(object newUser)
+    {
+        throw new NotImplementedException();
+    }
+
+    internal static Result<User> Fail(Exception exception)
+    {
+        throw new NotImplementedException();
+    }
 }

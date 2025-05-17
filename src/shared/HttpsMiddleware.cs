@@ -3,8 +3,4 @@ using System.Net;
 
 namespace SimpleMDB;
 
-public delegate Task HttpMiddleware(HttpListenerRequest req,HttpListenerResponse res, Hashtable options);
-
-
-
-
+public delegate Task HttpMiddleware(HttpListenerRequest req, HttpListenerResponse res, Hashtable options);

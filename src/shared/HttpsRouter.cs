@@ -1,18 +1,19 @@
-using System.Net;
 using System.Collections;
+using System.Diagnostics.CodeAnalysis;
+using System.Net;
+using System.Reflection;
 
 namespace SimpleMDB;
-
 public class HttpRouter
 {
-    public static readonly int Response_NOT_SENT_YET = 777;
+    public static readonly int Response_Not_Sent_YET = 777;
     private List<HttpMiddleware> middlewares;
-    private List<(string,string,HttpMiddleware[] middlewares) > endpoint;
+    private List<(string, string, HttpMiddleware[] middlewares)> endpoints;
 
     public HttpRouter()
     {
         middlewares = [];
-        endpoint = [];
+        endpoints = [];
     }
 
     public void Use(params HttpMiddleware[] middlewares)
@@ -20,63 +21,59 @@ public class HttpRouter
         this.middlewares.AddRange(middlewares);
     }
 
-    public void AddEndpoint(string method, string route, params HttpMiddleware[] middleware)
+    public void AddEndpoint(string method, string route, params HttpMiddleware[] middlewares)
     {
-        this.endpoint.Add((method ,route, middleware));
-
-
+        this.endpoints.Add((method, route, middlewares));
     }
 
-    public void AddGet(string route , params HttpMiddleware[]middlewares)
+    public void AddGet(string route, params HttpMiddleware[] middlewares)
     {
-        AddEndpoint("Get", route,middlewares);
-
-    }
-      public void AddPost(string route , params HttpMiddleware[]middlewares)
-    {
-        AddEndpoint("Post", route,middlewares);
-
-    }
-      public void AddPut(string route , params HttpMiddleware[]middlewares)
-    {
-        AddEndpoint("Put", route,middlewares);
-
-    }
-      public void AddDelete(string route , params HttpMiddleware[]middlewares)
-    {
-        AddEndpoint("Delete", route,middlewares);
-
+        AddEndpoint("GET", route, middlewares);
     }
 
-    public async Task Handle(HttpListenerRequest req,HttpListenerResponse res, Hashtable option)
+    public void AddPost(string route, params HttpMiddleware[] middlewares)
     {
-        res.StatusCode = Response_NOT_SENT_YET;
+        AddEndpoint("POST", route, middlewares);
+    }
 
-        foreach(var middleware in middlewares)
+    public void AddPut(string route, params HttpMiddleware[] middlewares)
+    {
+        AddEndpoint("PUT", route, middlewares);
+    }
+
+    public void AddDelete(string route, params HttpMiddleware[] middlewares)
+    {
+        AddEndpoint("DELETE", route, middlewares);
+    }
+
+    public async Task Handle(HttpListenerRequest req, HttpListenerResponse res, Hashtable options)
+    {
+        res.StatusCode = Response_Not_Sent_YET;
+
+        foreach (var middleware in middlewares)
         {
-            await middleware(req,res,option);
-            if(res.StatusCode != Response_NOT_SENT_YET){return;}
+            await middleware(req, res, options);
+
+            if (res.StatusCode != Response_Not_Sent_YET) { return; }
         }
-        
-       foreach (var (method, route, endpointMiddlewares) in endpoint)
+
+        foreach (var (method, route, middlewares) in endpoints)
         {
-            if (req.HttpMethod.ToUpper() == method.ToUpper() && req.Url!.AbsolutePath == route)
+            if (req.HttpMethod == method && req.Url!.AbsolutePath == route)
             {
-                foreach (var middleware in endpointMiddlewares)
+                foreach (var middleware in middlewares)
                 {
-                    await middleware(req, res, option);
-                    if (res.StatusCode != Response_NOT_SENT_YET){ return;}
+                    await middleware(req, res, options);
+
+                    if (res.StatusCode != Response_Not_Sent_YET) { return; }
                 }
             }
         }
 
-      if(res.StatusCode == Response_NOT_SENT_YET)
-      {
-        res.StatusCode = (int)HttpStatusCode.NotFound;
-        res.Close();
-      }
-
-    
+        if (res.StatusCode == Response_Not_Sent_YET)
+        {
+            res.StatusCode = (int)HttpStatusCode.NotFound;
+            res.Close();
+        }
     }
-
 }

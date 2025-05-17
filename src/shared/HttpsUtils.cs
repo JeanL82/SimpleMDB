@@ -1,6 +1,9 @@
+using System.Buffers.Binary;
 using System.Collections;
+using System.Data.SqlTypes;
 using System.Net;
 using System.Text;
+using System.Web;
 
 namespace SimpleMDB
 {
@@ -16,60 +19,49 @@ namespace SimpleMDB
             res.ContentType = "text/html";
             res.ContentLength64 = content.LongLength;
 
+
             await res.OutputStream.WriteAsync(content); // Escribir los bytes en la salida
-            res.Close(); // Cerrar la respuesta
+            res.Close(); // 
+            
         }
 
-        // Método no implementado, que lanza una excepción para indicar que aún no se ha implementado
-        internal static void Respond(HttpListenerRequest req, HttpListenerResponse res, FileOptions fileOptions, string html)
+        public static  async Task Redirect(HttpListenerRequest req, HttpListenerResponse res, Hashtable options,string location)
+        {
+            string message =(string ?)options["message"]?? "";
+            string query = string.IsNullOrWhiteSpace(message)? "" : "?message=" + HttpUtils.UrlEncode(message);
+            
+            res.Redirect(location + query);
+            res.Close();
+
+            await Task.CompletedTask ;
+        }
+
+        private static string UrlEncode(string message)
         {
             throw new NotImplementedException();
         }
 
-        // Método no implementado, lanza una excepción si se utiliza
-        internal static void Respond(HttpListenerRequest req, HttpListenerResponse res, object options, string html)
+        public static async Task ReadRequestFormData(HttpListenerRequest req, HttpListenerResponse res, Hashtable options)
         {
-            throw new NotImplementedException();
-        }
+            string type = req.ContentType?? "";
+            if ( type.StartsWith("application/x-www-Form-urlencoded"))
+            {
+                 using var sr = new StreamReader(req.InputStream,Encoding.UTF8);
+                 string body =await sr.ReadToEndAsync();
+                 var formData = HttpUtility.ParseQueryString(body);
 
-        // Método asincrónico para responder utilizando una tabla hash (Hashtable) de opciones
-        internal static async Task Respond(HttpListenerRequest req, HttpListenerResponse res, Hashtable options, int statusCode, int ok, string html)
-        {
-            try
-            {
-                // Verificar si 'options' no es nulo y contiene la clave 'body'
-                if (options != null && options.ContainsKey("body"))
-                {
-                    var body = options["body"]?.ToString(); // Usar el operador null-conditional para evitar nulidad
-                    if (body != null)
-                    {
-                        await RespondAsync(req, res, options, statusCode, body); // Llamar a RespondAsync con el cuerpo válido
-                    }
-                    else
-                    {
-                        // Si el valor es nulo, responder con un cuerpo vacío
-                        await RespondAsync(req, res, options, statusCode, string.Empty);
-                    }
-                }
-                else
-                {
-                    // Si no se encuentran las opciones, responder con el valor de html
-                    await RespondAsync(req, res, options, statusCode, html);
-                }
-            }
-            catch (Exception ex)
-            {
-                // Manejo de excepciones, se responde con un código de error 500
-                Console.WriteLine("Error in responding: " + ex.Message);
-                res.StatusCode = 500; // Internal Server Error
-                res.Close();
+
+                 options["req.form"] = formData;
+
+
             }
         }
 
-        internal static async Task Respond(HttpListenerRequest req, HttpListenerResponse res, Hashtable options, int internalServerError, string v)
+        internal static async Task Respond(HttpListenerRequest req, HttpListenerResponse res, Hashtable options, int oK, string content)
         {
             throw new NotImplementedException();
         }
     }
-    
 }
+        
+    
