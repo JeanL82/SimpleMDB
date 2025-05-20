@@ -1,4 +1,4 @@
-using System.Security.Cryptography.X509Certificates;
+
 
 namespace SimpleMDB;
 
@@ -27,6 +27,11 @@ public class Result<T>
     }
 
     internal static Result<User> Fail(Exception exception)
+    {
+        throw new NotImplementedException();
+    }
+
+    public static implicit operator Result<T>(Result<Actor> v)
     {
         throw new NotImplementedException();
     }
